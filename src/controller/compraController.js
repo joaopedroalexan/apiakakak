@@ -27,6 +27,7 @@ module.exports = class compraController {
       }
     );
   } //fim registrarCompraSimple
+
   static registrarCompra(req, res) {
     const { id_usuario, ingressos } = req.body;
 
@@ -41,41 +42,41 @@ module.exports = class compraController {
           return res
             .status(500)
             .json({ error: "erro ao criar a compra no sistema!!" });
-
-          const id_compra = result.insertId;
-          console.log("compra criada com o ID:", id_compra);
-
-          //inicializa o index dos ingressos
-          let index = 0;
-
-          //função recursiva pra processo sequencial de ingressos
-          function processarIngresso() {
-            if (index >= ingressos.length) {
-              return res.status(201).json({
-                message: "Compra realizada com seucesso!!",
-                id_compra,
-                ingressos,
-              });
-            }
-            const ingresso = ingressos[index];
-            //chamada da procedure para registro de compras
-            connect.query(
-              "CALL registrar_new_compra (?, ?, ?);",
-              [ingresso.id_ingresso, id_compra, ingresso.quantidade],
-              (err) => {
-                if (err) {
-                  return res.status(500).json({
-                    error: `Erro ao registrar o ingresso ${index + 1}`,
-                    detalhes: err.message,
-                  });
-                }
-                index++;
-                processarIngresso();
-              }
-            );
-          }
-          processarIngresso();
         }
+
+        const id_compra = result.insertId;
+        console.log("compra criada com o ID:", id_compra);
+
+        //inicializa o index dos ingressos
+        let index = 0;
+
+        //função recursiva pra processo sequencial de ingressos
+        function processarIngresso() {
+          if (index >= ingressos.length) {
+            return res.status(201).json({
+              message: "Compra realizada com seucesso!!",
+              id_compra,
+              ingressos,
+            });
+          }
+          const ingresso = ingressos[index];
+          //chamada da procedure para registro de compras
+          connect.query(
+            "CALL registrar_new_compra (?, ?, ?);",
+            [ingresso.id_ingresso, id_compra, ingresso.quantidade],
+            (err) => {
+              if (err) {
+                return res.status(500).json({
+                  error: `Erro ao registrar o ingresso ${index + 1}`,
+                  detalhes: err.message,
+                });
+              }
+              index++;
+              processarIngresso();
+            }
+          );
+        }
+        processarIngresso();
       }
     );
   }
